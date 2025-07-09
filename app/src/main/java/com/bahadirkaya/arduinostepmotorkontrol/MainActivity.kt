@@ -44,6 +44,9 @@ fun SorguSonucuEkrani() {
     var updateAvailable by remember { mutableStateOf(false) }
     var apkUrl by remember { mutableStateOf("") }
 
+    val flaskBaseUrl = "http://192.168.1.102:5050"
+
+    // Sürüm kontrolü
     LaunchedEffect(Unit) {
         val url =
             "https://script.google.com/macros/s/AKfycbyBhKdr4AeUGKmV8u1xzMFZ9Q5qFQkL8rGVFYtMngTLWXGH_eEwE1EacTlk0dULVNto/exec"
@@ -93,40 +96,59 @@ fun SorguSonucuEkrani() {
                 Text("Güncellemeyi İndir")
             }
         } else {
-            Text("Uygulama Sürüm: ${BuildConfig.VERSION_NAME}")
-            Text("Sunucu Sürüm: $versionName")
-            Text("Bu cihazdaki sürüm: ${BuildConfig.VERSION_NAME}")
-
-
+            Text("✅ Uygulama güncel.", color = MaterialTheme.colorScheme.secondary)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🟢 Raspberry Pi'ye bağlantı butonu
+        // 🔌 Röle kontrolü
+        Text("🔧 Röle Kontrolü", style = MaterialTheme.typography.titleLarge)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Button(onClick = {
+                gonderKomut(context, "$flaskBaseUrl/relay?durum=ON")
+            }) {
+                Text("Röle AÇ")
+            }
+
+            Button(onClick = {
+                gonderKomut(context, "$flaskBaseUrl/relay?durum=OFF")
+            }) {
+                Text("Röle KAPA")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 🔎 Bağlantı testi
         Button(onClick = {
-            val client = OkHttpClient()
-            val request = Request.Builder()
-                .url("http://192.168.1.102:5050/hello")
-                .build()
-
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    Log.e("API_ERROR", "İstek başarısız: ${e.message}")
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    response.body?.string()?.let { body ->
-                        Log.d("API_SUCCESS", "Yanıt: $body")
-                        Handler(Looper.getMainLooper()).post {
-                            Toast.makeText(context, body, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            })
+            gonderKomut(context, "$flaskBaseUrl/hello")
         }) {
             Text("Raspberry Pi'ye Bağlan")
         }
     }
+}
+
+fun gonderKomut(context: Context, url: String) {
+    val client = OkHttpClient()
+    val request = Request.Builder().url(url).build()
+
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, "Bağlantı hatası: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            response.body?.string()?.let { body ->
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(context, body, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    })
 }
 
 fun indirVeYukle(context: Context, apkUrl: String) {
