@@ -1,10 +1,14 @@
-package com.bahadirkaya.surumkontrol
+package com.bahadirkaya.arduinostepmotorkontrol
 
+import android.os.Bundle
+import android.os.Environment
 import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
-import android.os.Bundle
-import android.os.Environment
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -13,17 +17,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.bahadirkaya.surumkontrol.ui.theme.SurumKontrolTheme
+import com.bahadirkaya.arduinostepmotorkontrol.ui.theme.arduinostepmotorkontrolTheme
 import okhttp3.*
-import java.io.IOException
 import org.json.JSONObject
-import com.bahadirkaya.surumkontrol.BuildConfig
+import java.io.IOException
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SurumKontrolTheme {
+            arduinostepmotorkontrolTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     SorguSonucuEkrani()
                 }
@@ -43,7 +46,8 @@ fun SorguSonucuEkrani() {
 
     LaunchedEffect(Unit) {
         val url =
-            "https://script.google.com/macros/s/AKfycbxSNL58f0LSeiCPJ-5bo5Ror9vgtteTqdw_lT2BZQFCuCMxRwOG4W0L0GWJGpAb3OPKew/exec"
+            "https://script.google.com/macros/s/AKfycbyBhKdr4AeUGKmV8u1xzMFZ9Q5qFQkL8rGVFYtMngTLWXGH_eEwE1EacTlk0dULVNto/exec"
+
         val client = OkHttpClient()
         val request = Request.Builder().url(url).build()
 
@@ -79,6 +83,7 @@ fun SorguSonucuEkrani() {
         Spacer(modifier = Modifier.height(8.dp))
         Text("Mesaj: $mesaj", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(12.dp))
+
         if (updateAvailable) {
             Text("🔔 Yeni güncelleme mevcut!", color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(12.dp))
@@ -88,9 +93,38 @@ fun SorguSonucuEkrani() {
                 Text("Güncellemeyi İndir")
             }
         } else {
-            Text("Uygulama güncel.", color = MaterialTheme.colorScheme.secondary)
-            Text("Bu, 1.2 sürümüdür.") // Yeni sürüm göstergesi
+            Text("Uygulama Sürüm: ${BuildConfig.VERSION_NAME}")
+            Text("Sunucu Sürüm: $versionName")
+            Text("Bu cihazdaki sürüm: ${BuildConfig.VERSION_NAME}")
 
+
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 🟢 Raspberry Pi'ye bağlantı butonu
+        Button(onClick = {
+            val client = OkHttpClient()
+            val request = Request.Builder()
+                .url("http://192.168.1.102:5050/hello")
+                .build()
+
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e("API_ERROR", "İstek başarısız: ${e.message}")
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    response.body?.string()?.let { body ->
+                        Log.d("API_SUCCESS", "Yanıt: $body")
+                        Handler(Looper.getMainLooper()).post {
+                            Toast.makeText(context, body, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            })
+        }) {
+            Text("Raspberry Pi'ye Bağlan")
         }
     }
 }
@@ -100,7 +134,7 @@ fun indirVeYukle(context: Context, apkUrl: String) {
         setTitle("Yeni güncelleme indiriliyor")
         setDescription("Lütfen bekleyin...")
         setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "surumkontrol.apk")
+        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "arduinostepmotorkontrol.apk")
         setMimeType("application/vnd.android.package-archive")
     }
 

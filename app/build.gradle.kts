@@ -1,21 +1,29 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("com.android.application")
+    kotlin("android")
+    kotlin("plugin.compose")
 }
 
 android {
-    namespace = "com.bahadirkaya.surumkontrol"
+    namespace = "com.bahadirkaya.arduinostepmotorkontrol"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.bahadirkaya.surumkontrol"
+        applicationId = "com.bahadirkaya.arduinostepmotorkontrol"
         minSdk = 21
         targetSdk = 36
         versionCode = 3
         versionName = "1.2"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("arduinostepmotorkontrol-key.jks")
+            storePassword = "87888788"
+            keyAlias = "arduinostepmotorkontrolkey"
+            keyPassword = "87888788"
+        }
     }
 
     buildTypes {
@@ -25,23 +33,28 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
-        buildConfig = true // ← EKLE BUNU
+        buildConfig = true
     }
+
     applicationVariants.all {
         outputs.all {
             val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            val appName = "surumkontrol"
+            val appName = "arduinostepmotorkontrol"
             val version = versionName
             val buildType = buildType.name
             outputImpl.outputFileName = "${appName}_v${version}_${buildType}.apk"
@@ -50,7 +63,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -60,7 +72,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("org.json:json:20231013")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

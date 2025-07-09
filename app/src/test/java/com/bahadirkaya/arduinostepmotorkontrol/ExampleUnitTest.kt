@@ -1,4 +1,4 @@
-package com.bahadirkaya.surumkontrol
+package com.bahadirkaya.arduinostepmotorkontrol
 
 import org.junit.Test
 

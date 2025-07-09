@@ -1,4 +1,4 @@
-package com.bahadirkaya.surumkontrol.ui.theme
+package com.bahadirkaya.arduinostepmotorkontrol.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -19,7 +19,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun SurumKontrolTheme(
+fun arduinostepmotorkontrolTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit

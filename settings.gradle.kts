@@ -1,16 +1,11 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
-        mavenCentral()
-        gradlePluginPortal()
+        google()            // 🔥 Android plugin'leri burada bulunur
+        mavenCentral()      // 🔥 Diğer Kotlin/Java plugin'leri burada bulunur
+        gradlePluginPortal() // 🔥 Kotlin DSL plugin'lerini destekler
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -19,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "surumkontrol"
+rootProject.name = "arduinostepmotorkontrol"
 include(":app")

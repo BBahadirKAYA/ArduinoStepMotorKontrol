@@ -1,4 +1,4 @@
-package com.bahadirkaya.surumkontrol.ui.theme
+package com.bahadirkaya.arduinostepmotorkontrol.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
