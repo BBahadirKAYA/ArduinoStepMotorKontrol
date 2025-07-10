@@ -16,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.arduinostepmotorkontrol"
         android:networkSecurityConfig="@xml/network_security_config">
+        <activity android:name=".AyarlarSayfasi" />
 
         <activity
             android:name=".MainActivity"

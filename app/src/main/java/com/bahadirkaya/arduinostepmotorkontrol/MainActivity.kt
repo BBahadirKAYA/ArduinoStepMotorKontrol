@@ -120,6 +120,24 @@ fun SorguSonucuEkrani() {
         ) {
             Text("🔗 Raspberry Pi'ye Bağlan")
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = {
+                    val intent = Intent(context, AyarlarSayfasi::class.java)
+                    context.startActivity(intent)
+                },
+                modifier = Modifier
+                    .widthIn(min = 180.dp, max = 240.dp)
+                    .height(48.dp)
+            ) {
+                Text("Ayarlar")
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -132,39 +150,38 @@ fun SorguSonucuEkrani() {
 @Composable
 fun CokluRoleKontrolPaneli() {
     val context = LocalContext.current
-    val gpioPinList = listOf(17, 18, 23, 24)
     val durumlar = remember { mutableStateMapOf<Int, String>() }
     val flaskBaseUrl = "http://192.168.1.102:5050"
 
-    Column {
-        Text(
-            "🔌 Röle Kontrol Paneli",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 12.dp)
+    // SharedPreferences'tan pin numaralarını oku
+    val pinList = remember {
+        val prefs = context.getSharedPreferences("ayarlar", Context.MODE_PRIVATE)
+        listOf(
+            prefs.getInt("pin1", 17),
+            prefs.getInt("pin2", 18),
+            prefs.getInt("pin3", 23),
+            prefs.getInt("pin4", 24)
         )
+    }
 
-        gpioPinList.forEach { pin ->
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("🔌 Röle Kontrol Paneli", style = MaterialTheme.typography.titleLarge)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        pinList.forEach { pin ->
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                elevation = CardDefaults.cardElevation(4.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                elevation = CardDefaults.cardElevation(6.dp)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-
-                    // GPIO başlık + durum
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row {
                             Icon(
                                 imageVector = Icons.Default.PowerSettingsNew,
-                                contentDescription = "GPIO $pin",
+                                contentDescription = "Role",
                                 tint = getDurumRenk(durumlar[pin])
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -173,43 +190,29 @@ fun CokluRoleKontrolPaneli() {
                         Text(
                             text = durumlar[pin] ?: "Bilinmiyor",
                             color = getDurumRenk(durumlar[pin]),
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Bold
                         )
                     }
-
                     Spacer(modifier = Modifier.height(8.dp))
-
-                    // Aç - Kapat butonları
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                gonderKomut(context, "$flaskBaseUrl/relay?pin=$pin&durum=ON") {
-                                    durumlar[pin] = it
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Aç")
-                        }
-                        Button(
-                            onClick = {
-                                gonderKomut(context, "$flaskBaseUrl/relay?pin=$pin&durum=OFF") {
-                                    durumlar[pin] = it
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Kapat")
-                        }
+                    Row {
+                        Button(onClick = {
+                            gonderKomut(context, "$flaskBaseUrl/relay?pin=$pin&durum=ON") {
+                                durumlar[pin] = it
+                            }
+                        }) { Text("Aç") }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(onClick = {
+                            gonderKomut(context, "$flaskBaseUrl/relay?pin=$pin&durum=OFF") {
+                                durumlar[pin] = it
+                            }
+                        }) { Text("Kapat") }
                     }
                 }
             }
         }
     }
 }
+
 
 
 fun getDurumRenk(durum: String?): Color {
