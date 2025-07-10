@@ -27,6 +27,8 @@ import com.bahadirkaya.arduinostepmotorkontrol.ui.theme.arduinostepmotorkontrolT
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
+import androidx.compose.ui.Alignment
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -134,24 +136,35 @@ fun CokluRoleKontrolPaneli() {
     val durumlar = remember { mutableStateMapOf<Int, String>() }
     val flaskBaseUrl = "http://192.168.1.102:5050"
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("🔌 Röle Kontrol Paneli", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(8.dp))
+    Column {
+        Text(
+            "🔌 Röle Kontrol Paneli",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
 
         gpioPinList.forEach { pin ->
             Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                elevation = CardDefaults.cardElevation(6.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                elevation = CardDefaults.cardElevation(4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
+
+                    // GPIO başlık + durum
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.PowerSettingsNew,
-                                contentDescription = "Role",
+                                contentDescription = "GPIO $pin",
                                 tint = getDurumRenk(durumlar[pin])
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -160,28 +173,44 @@ fun CokluRoleKontrolPaneli() {
                         Text(
                             text = durumlar[pin] ?: "Bilinmiyor",
                             color = getDurumRenk(durumlar[pin]),
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Medium
                         )
                     }
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row {
-                        Button(onClick = {
-                            gonderKomut(context, "$flaskBaseUrl/relay?pin=$pin&durum=ON") {
-                                durumlar[pin] = it
-                            }
-                        }) { Text("Aç") }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = {
-                            gonderKomut(context, "$flaskBaseUrl/relay?pin=$pin&durum=OFF") {
-                                durumlar[pin] = it
-                            }
-                        }) { Text("Kapat") }
+
+                    // Aç - Kapat butonları
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                gonderKomut(context, "$flaskBaseUrl/relay?pin=$pin&durum=ON") {
+                                    durumlar[pin] = it
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Aç")
+                        }
+                        Button(
+                            onClick = {
+                                gonderKomut(context, "$flaskBaseUrl/relay?pin=$pin&durum=OFF") {
+                                    durumlar[pin] = it
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Kapat")
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 fun getDurumRenk(durum: String?): Color {
     return when (durum) {
