@@ -33,21 +33,28 @@ import androidx.compose.ui.Alignment
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             arduinostepmotorkontrolTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    SorguSonucuEkrani()
+                var aktifSayfa by remember { mutableStateOf("ana") }
+
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    when (aktifSayfa) {
+                        "ana" -> SorguSonucuEkrani(
+                            onStepMotorTikla = { aktifSayfa = "step" }
+                        )
+                        "step" -> StepMotorKontrolEkrani(onGeriDon = { aktifSayfa = "ana" })
+
+                    }
                 }
             }
         }
     }
 }
 
+
 @Composable
-fun SorguSonucuEkrani() {
+fun SorguSonucuEkrani(onStepMotorTikla: () -> Unit) {
     val context = LocalContext.current
     var versionCodeFromServer by remember { mutableStateOf(-1) }
     var versionName by remember { mutableStateOf("") }
@@ -140,6 +147,23 @@ fun SorguSonucuEkrani() {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+// 🔘 Step Motor Kontrol Butonu
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = onStepMotorTikla,
+                modifier = Modifier
+                    .widthIn(min = 180.dp, max = 240.dp)
+                    .height(48.dp)
+            ) {
+                Text("Step Motor Kontrol")
+            }
+        }
 
         // Röle paneli
         CokluRoleKontrolPaneli()
