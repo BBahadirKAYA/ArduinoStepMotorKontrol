@@ -163,7 +163,32 @@ fun CokluRoleKontrolPaneli() {
             prefs.getInt("pin4", 24)
         )
     }
+    // 🟡 Başlangıçta tüm pinlerin durumlarını sorgula
+    LaunchedEffect(Unit) {
+        val client = OkHttpClient()
+        pinList.forEach { pin ->
+            val request = Request.Builder()
+                .url("$flaskBaseUrl/relay/status?pin=$pin")
+                .build()
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    durumlar[pin] = "Bilinmiyor"
+                }
 
+                override fun onResponse(call: Call, response: Response) {
+                    response.body?.string()?.let { body ->
+                        try {
+                            val json = JSONObject(body)
+                            val durum = json.getString("durum") // "AÇIK" veya "KAPALI"
+                            durumlar[pin] = durum
+                        } catch (e: Exception) {
+                            durumlar[pin] = "Bilinmiyor"
+                        }
+                    }
+                }
+            })
+        }
+    }
     Column(modifier = Modifier.padding(16.dp)) {
         Text("🔌 Röle Kontrol Paneli", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(8.dp))
@@ -233,13 +258,25 @@ fun gonderKomut(context: Context, url: String, onResult: ((String) -> Unit)? = n
                 onResult?.invoke("HATA")
             }
         }
+
         override fun onResponse(call: Call, response: Response) {
             response.body?.string()?.let { body ->
                 Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(context, body, Toast.LENGTH_SHORT).show()
-                    if (body.contains("AÇILDI")) onResult?.invoke("AÇIK")
-                    else if (body.contains("KAPANDI")) onResult?.invoke("KAPALI")
-                    else onResult?.invoke("Bilinmiyor")
+                    try {
+                        val json = JSONObject(body)
+                        val status = json.getString("status")
+                        Toast.makeText(context, status, Toast.LENGTH_SHORT).show()
+
+                        when {
+                            status.contains("AÇILDI") -> onResult?.invoke("AÇIK")
+                            status.contains("KAPANDI") -> onResult?.invoke("KAPALI")
+                            else -> onResult?.invoke("Bilinmiyor")
+                        }
+
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Yanıt çözümlemesi hatası", Toast.LENGTH_SHORT).show()
+                        onResult?.invoke("Bilinmiyor")
+                    }
                 }
             }
         }
